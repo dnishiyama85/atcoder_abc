@@ -1,7 +1,7 @@
 import sys
 import random
 
-n = 1000
+n = 100000
 maxint = 1e9
 
 print(n)

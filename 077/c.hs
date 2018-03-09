@@ -1,52 +1,54 @@
 import Data.List
 import Data.Array.IO
-import Debug.Trace
 import Control.Monad
+import Data.Maybe
+import qualified Data.ByteString.Char8 as BC8
+
+type Arr = IOUArray Int Int
 
 main :: IO ()
 main = do
   n <- readLn :: IO Int
-  as <- (sort . map read . words) <$> getLine :: IO [Int]
-  _bs <- (sort . map read . words) <$> getLine :: IO [Int]
-  _cs <- (sort . map read . words) <$> getLine :: IO [Int]
-  bs <- newListArray (0, n - 1) _bs :: IO (IOUArray Int Int)
-  cs <- newListArray (0, n - 1) _cs :: IO (IOUArray Int Int)
-  print =<< getElems cs
-  print =<< solve as bs cs
+  as <- newListArray (0, n - 1) =<< (sort . map (fst . fromJust . BC8.readInt) . BC8.words) <$> BC8.getLine :: IO Arr
+  bs <- (sort . map (fst . fromJust . BC8.readInt) . BC8.words) <$> BC8.getLine :: IO [Int]
+  cs <- newListArray (0, n - 1) =<< (sort . map (fst . fromJust . BC8.readInt) . BC8.words) <$> BC8.getLine :: IO Arr
+  print =<< solve as bs cs n
 
-solve :: [Int] -> IOUArray Int Int -> IOUArray Int Int -> IO Int
-solve as bs cs =
-  sum <$> mapM (\a -> solveA a bs cs) as
+solve :: Arr -> [Int] -> Arr -> Int -> IO Int
+solve as bs cs n = do
+  -- bList <- getElems bs
+  counts <- forM bs $ \b -> solveB as b cs n
+  return $ sum counts
 
-solveA :: Int -> IOUArray Int Int -> IOUArray Int Int -> IO Int
-solveA a bs cs = do
-  (s, e) <- getBounds cs
-  p <- binSearch a bs s e
-  bs' <- drop p <$> getElems bs
-  sum <$> mapM (\b -> solveB b cs) bs'
+solveB :: Arr -> Int -> Arr -> Int -> IO Int
+solveB as b cs n = do
+  upperA <- upperBound as b n
+  lowerC <- lowerBound cs b n
+  -- putStrLn $ printf "b = %d, upperA = %d, lowerC = %d" b upperA lowerC
+  return ((upperA + 1) * (n - lowerC))
 
-solveB :: Int -> IOUArray Int Int -> IO Int
-solveB b cs = do
-    (s, e) <- getBounds cs
-    p <- binSearch b cs s e
-    return (e - p + 1)
+upperBound :: Arr -> Int -> Int -> IO Int
+upperBound arr k n = _upperBound (-1) n
+  where
+    _upperBound :: Int -> Int -> IO Int
+    _upperBound left right
+      | right - left <= 1 = return left
+      | otherwise = do
+          let center = (left + right) `div` 2
+          cVal <- readArray arr center
+          if cVal < k
+            then _upperBound center right
+            else _upperBound left center
 
-binSearch :: Int -> IOUArray Int Int -> Int -> Int -> IO Int
-binSearch a bs left right = do
-  leftValue <- readArray bs left
-  rightValue <- readArray bs right
-  (_, e) <- getBounds bs
-  if left == 0 && a < leftValue
-    then return 0
-    else
-      if right == e && a >= rightValue
-        then return (e + 1)
-        else
-          if left + 1 >= right
-            then return right
-            else do
-              let p = (left + right) `div` 2
-              v <- readArray bs p
-              if v <= a
-                then binSearch a bs p right
-                else binSearch a bs left p
+lowerBound :: Arr -> Int -> Int -> IO Int
+lowerBound arr k n = _lowerBound (-1) n
+    where
+      _lowerBound :: Int -> Int -> IO Int
+      _lowerBound left right
+        | right - left <= 1 = return right
+        | otherwise = do
+            let center = (left + right) `div` 2
+            cVal <- readArray arr center
+            if cVal <= k
+              then _lowerBound center right
+              else _lowerBound left center
