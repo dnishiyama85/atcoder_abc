@@ -1,0 +1,38 @@
+@n = gets.to_i
+as = gets.strip.split.map(&:to_i)
+max_a = as.max
+
+l = 1
+r = 1e9
+
+as2 = (1..@n).map { |i| as[i - 1] + i }.sort
+
+cumsum = []
+for a in as2
+    last = cumsum.empty? ? 0 : cumsum.last
+    cumsum << last + a
+end
+
+# an - b の符号の変わり目を二分探索
+def search(as2, b)
+    lb = 0
+    rb = as2.size
+    while rb - lb > 1 do
+        center = (lb + rb) / 2
+        if as2[center] - b >= 0
+            rb = center
+        else
+            lb = center
+        end
+    end
+    return lb
+end
+
+def sorrow(cumsum, as2, b)
+    n1 = search(as2, b)
+    s = -2 * cumsum[n1] + cumsum[@n - 1] + (2 * n1 - @n) * b
+end
+
+# puts (0..max_a).map { |b| sorrow(cumsum, as2, b) }.min
+puts sorrow(cumsum, as2, 0)
+
