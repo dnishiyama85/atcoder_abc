@@ -1,14 +1,5 @@
 *.o
 *.hi
 
-# 実行ファイルを無視
-a
-b
-c
-d
-e
-f
-g
-h
-i
+.python-version
 
