@@ -18,12 +18,11 @@ while broken < n:
         else:
             broken += 1
 
-
-    if n - broken == next_num:
+    if n - broken == next_num - 1:
         success = True
         break
 
-if success:
+if n - broken > 0 and success:
     print(broken)
 else:
     print(-1)

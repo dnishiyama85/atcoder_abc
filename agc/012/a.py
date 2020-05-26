@@ -1,0 +1,5 @@
+n = int(input())
+as_ = list(map(int, input().strip().split()))
+as_ = sorted(as_, reverse=True)
+total = sum([as_[i] for i in range(n * 2) if i % 2 == 1])
+print(total)
